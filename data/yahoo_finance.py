@@ -6,10 +6,11 @@ from click import option
 import pandas as pd
 
 class YahooFinance:
-    def __init__(self, ticker):
+    def __init__(self, ticker, years_back_trace=10):
         self.ticker = ticker
         self.yf_api = yf.Ticker(self.ticker)
         self.hist = None
+        self.years_back_trace = years_back_trace
         test_data = self.yf_api.history(period='5d', interval='1d')
         if (len(test_data) == 0):
             raise NameError("Incorrect stock ticker")
@@ -60,8 +61,18 @@ class YahooFinance:
                 return lst_dt[i].date()
         return dt
 
-    def get_vol(self, dt, backtrace_year=1, col = 'Close'):
-        return self.yf_api.history(start=dt+relativedelta(years=-backtrace_year), end=dt)[col].std()
+    def get_vol(self, dt, col = 'Close'):
+        data = self.yf_api.history(start=dt+relativedelta(years=-self.years_back_trace), end=dt)[col].pct_change()
+
+        # Calculate daily returns
+        #data['Daily_Return'] = data['Adj Close'].pct_change()
+
+        # std of daily returns
+        daily_volatility = data.std()
+        annualized_volatility = daily_volatility * np.sqrt(252)
+
+        return annualized_volatility
+        #return self.yf_api.history(start=dt+relativedelta(years=-backtrace_year), end=dt)[col].std()
 
     def get_10yr_treasury_rate(self):
         # 10 year treasury ticker symbol

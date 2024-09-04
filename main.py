@@ -26,7 +26,7 @@ with col1:
                                  value=yf.available_hist_date()[-1], max_value=datetime.now())
 
     S0_ = yf.get_stock_price(pricing_date)
-    sigma_ = yf.get_vol(pricing_date, backtrace_year=1)
+    sigma_ = yf.get_vol(pricing_date)
     col11, col12 = st.columns(2, gap = 'small')
     with col11:
         st.text('Hist Stock price')
