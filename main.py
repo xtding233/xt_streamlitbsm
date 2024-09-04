@@ -30,9 +30,9 @@ with col1:
     col11, col12 = st.columns(2, gap = 'small')
     with col11:
         st.text('Hist Stock price')
-        st.text(str(S0_))
+        st.text(str(round(S0_,2)))
         st.text('Hist Volatility')
-        st.text(str(sigma_))
+        st.text(str(round(sigma_,2)))
     with col12:
         S0 = st.number_input(label="Stock price", value=S0_)
         sigma = st.number_input(label="Volatility", value=sigma_)
@@ -44,7 +44,7 @@ with col2:
     with col21:
         st.text('10yr T-rate')
         rt = yf.get_10yr_treasury_rate()
-        st.text(str(rt))
+        st.text(str(round(rt,2)))
     with col22:
         r = st.number_input(label="Risk-Free rate", value=rt)
     T = st.number_input(label="Time to option expiration", value=3 / 12)
@@ -59,7 +59,7 @@ st.header("Results")
 expire_date = yf.get_closet_available_date(pricing_date + relativedelta(days=T*365)).strftime('%Y-%m-%d')
 
 st.write(f"Closest Expiration Date = " + str(expire_date))
-st.write(f"BSM Option Price ({option_type}) = {calc}".format(option_type=option_type,calc=str(calc)))
+st.write(f"BSM Option Price ({option_type}) = {round(calc,2)}")
 
 
 st.header('Market Option Price')
