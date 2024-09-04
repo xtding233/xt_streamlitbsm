@@ -1,3 +1,5 @@
+from difflib import get_close_matches
+
 import numpy as np
 from scipy.stats import norm
 import streamlit as st
@@ -15,12 +17,12 @@ st.header("Enter Option Information")
 col1, col2 = st.columns(2, gap = 'small')
 with col1:
     try:
-        ticker = st.text_input(label='Enter a stock symbol', value='AAPL')
+        ticker = st.text_input(label='Stock symbol', value='AAPL')
         prev_ticker = ticker
     except ValueError:
-        ticker = st.text_input(label='Enter a stock symbol', value=prev_ticker)
+        ticker = st.text_input(label='Stock symbol', value=prev_ticker)
     yf = YahooFinance(ticker)
-    pricing_date = st.date_input('Enter pricing date',
+    pricing_date = st.date_input('Pricing date',
                                  value=yf.available_hist_date()[-1], max_value=datetime.now())
 
     S0_ = yf.get_stock_price(pricing_date)
@@ -37,8 +39,14 @@ with col1:
 
 with col2:
     # get ticker
-    K = st.number_input(label="Strike price", value=9)
-    r = st.number_input(label="Interest rate", value=0.01)
+    K = st.number_input(label="Strike price", value=S0)
+    col21, col22 = st.columns(2, gap = 'small')
+    with col21:
+        st.text('10yr T-rate')
+        rt = yf.get_10yr_treasury_rate()
+        st.text(str(rt))
+    with col22:
+        r = st.number_input(label="Risk-Free rate", value=rt)
     T = st.number_input(label="Time to option expiration", value=3 / 12)
     option_type = st.selectbox(
         'Option type',
@@ -48,23 +56,23 @@ with col2:
     calc = black_scholes_calc(S0, K, r, T, sigma, option_type)
 
 st.header("Results")
-st.write(f"Closest Expiration Date = " + str(pricing_date+relativedelta(days=T*365)))
+expire_date = yf.get_closet_available_date(pricing_date + relativedelta(days=T*365)).strftime('%Y-%m-%d')
+
+st.write(f"Closest Expiration Date = " + str(expire_date))
 st.write(f"BSM Option Price ({option_type}) = {calc}".format(option_type=option_type,calc=str(calc)))
 
 
 st.header('Market Option Price')
-available_date = yf.option_availble_date()
-if pricing_date not in available_date:
-    default_date = yf.option_availble_date()[0]
-else:
-    default_date = pricing_date
 
-option_date = st.selectbox(label='Available Option Date',
-                           options=yf.option_availble_date(),
-                           placeholder=default_date)
+option_available_date = yf.option_available_date()
+option_available_date = ['<select>'] + list(option_available_date)
+default_ix = option_available_date.index(expire_date)
+# option_date = st.selectbox(label='Available Option Date',
+#                            options=yf.option_available_date(),
+#                            index=default_ix)
 
-data = yf.fetch_options_data(option_date, option_type=option_type)
-
+data = yf.fetch_options_data(expire_date, option_type=option_type)
+st.text("Expire Date = " + str(expire_date))
 st.dataframe(data, height=500, width=2000)
 
 st.header("Historical Stock Price - " + ticker)
