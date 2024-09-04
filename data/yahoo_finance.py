@@ -22,6 +22,8 @@ class YahooFinance:
                 data = self.yf_api.history(start=dt + timedelta(days=-2), end=dt + timedelta(days=1))[col]
         return data[0]
 
+    def get_stock_price_history(self, start : datetime, end : datetime.now(), cols=['Close']):
+        return self.yf_api.history(start=start, end=end)[cols]
 
     def fetch_options_data(self, dt, option_type='ALL'):
         options_data = self.yf_api.option_chain(date=dt)

@@ -12,8 +12,8 @@ st.title("Black Scholes Calculator")
 st.write("---")
 
 st.header("Enter Option Information")
-col11, col12 = st.columns(2, gap = 'small')
-with col11:
+col1, col2 = st.columns(2, gap = 'small')
+with col1:
     try:
         ticker = st.text_input(label='Enter a stock symbol', value='AAPL')
         prev_ticker = ticker
@@ -22,14 +22,20 @@ with col11:
     yf = YahooFinance(ticker)
     pricing_date = st.date_input('Enter pricing date',
                                  value=yf.available_hist_date()[-1], max_value=datetime.now())
-    st.text('Stock price')
-    S0 = yf.get_stock_price(pricing_date)
-    st.text(str(S0))
-    st.text('Volatility')
-    sigma = yf.get_vol(pricing_date, backtrace_year=1)
-    st.text(str(sigma))
 
-with col12:
+    S0_ = yf.get_stock_price(pricing_date)
+    sigma_ = yf.get_vol(pricing_date, backtrace_year=1)
+    col11, col12 = st.columns(2, gap = 'small')
+    with col11:
+        st.text('Hist Stock price')
+        st.text(str(S0_))
+        st.text('Hist Volatility')
+        st.text(str(sigma_))
+    with col12:
+        S0 = st.number_input(label="Stock price", value=S0_)
+        sigma = st.number_input(label="Volatility", value=sigma_)
+
+with col2:
     # get ticker
     K = st.number_input(label="Strike price", value=9)
     r = st.number_input(label="Interest rate", value=0.01)
@@ -46,7 +52,7 @@ st.write(f"Closest Expiration Date = " + str(pricing_date+relativedelta(days=T*3
 st.write(f"BSM Option Price ({option_type}) = {calc}".format(option_type=option_type,calc=str(calc)))
 
 
-st.header('Historical Option Price')
+st.header('Market Option Price')
 available_date = yf.option_availble_date()
 if pricing_date not in available_date:
     default_date = yf.option_availble_date()[0]
@@ -60,6 +66,10 @@ option_date = st.selectbox(label='Available Option Date',
 data = yf.fetch_options_data(option_date, option_type=option_type)
 
 st.dataframe(data, height=500, width=2000)
+
+st.header("Historical Stock Price - " + ticker)
+st.line_chart(yf.get_stock_price_history(start=pricing_date+relativedelta(years=-1), end=pricing_date, cols=['Open', 'High', 'Low',
+                                                                                                             'Close']))
 # with col4:
 #     st.header('Step by step calculation')
 #
